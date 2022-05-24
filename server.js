@@ -20,10 +20,15 @@ const io=new Server(server,{
 })
 
 let users={}
+// let users=[]
+
 
 const addUsers=(userId,socketId)=>{
-      
+        //   if(users.find((id)=>id===socketId))
+        //      return
+
           users[userId]=socketId
+        // users.push(socketId)
         console.log(users);
 }
 
@@ -31,11 +36,14 @@ const removeuser=(socketId)=>{
     delete users[socketId];
 
 }
+
 io.on('connection',(socket)=>{
     console.log('socketio connected');
     
 
     socket.on('join',({userId,socketId})=>{
+        if(userId===undefined ||userId===null)
+                    return;
         addUsers(userId,socket.id)
     })
 
@@ -49,6 +57,17 @@ io.on('connection',(socket)=>{
             to:data.to
         })
     })
+
+    socket.on('callUser',({userId,friendId,signalData})=>{
+        socket.emit('me',{socketId:socket.id})
+    
+        io.to(users[friendId]).emit('callUser',{from:userId,signal:signalData})
+    })
+
+    socket.on('answerCall',({signal,to})=>{
+        console.log('answer the call:',to);
+        io.to(users[to]).emit('answerCall',{signal})
+    })
    
      socket.on('demosever',(data)=>{
          socket.emit('democlient',{sms:'hi man'})
@@ -58,6 +77,10 @@ io.on('connection',(socket)=>{
         console.log('user is left!!!');
         removeuser(socket.id)
         console.log(users);
+    })
+    socket.on('hangUp',({friendId})=>{
+        console.log('hangUp')
+        io.to(users[friendId]).emit('hangUp')
     })
 
 

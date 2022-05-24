@@ -67,7 +67,7 @@ export const addTocontacts = async (req, res) => {
 export const fetchRooms = async(req, res) => {
     const { _id } = req.body;
     try {
-        const list = await DbUsers.aggregate([
+        var list = await DbUsers.aggregate([
             {
                 $match: { _id: mongoose.Types.ObjectId(_id) }
             },
