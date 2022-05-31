@@ -20,15 +20,11 @@ const io=new Server(server,{
 })
 
 let users={}
-// let users=[]
 
 
 const addUsers=(userId,socketId)=>{
-        //   if(users.find((id)=>id===socketId))
-        //      return
 
           users[userId]=socketId
-        // users.push(socketId)
         console.log(users);
 }
 
@@ -48,20 +44,21 @@ io.on('connection',(socket)=>{
     })
 
     socket.on('sendMessage',async({data,receiverId})=>{
-        console.log(data);
+        const {message,author,audioFile}=data
         console.log(receiverId);
         io.to(users[receiverId]).emit('newMessage',data)
-        await Message.create({
-            message:data.message,
-            author:data.author,
+        Message.create({
+            message,
+            author,
+            audioFile,
             to:data.to
         })
     })
 
-    socket.on('callUser',({userId,friendId,signalData})=>{
+    socket.on('callUser',({userId,userName,friendId,signalData})=>{
         socket.emit('me',{socketId:socket.id})
     
-        io.to(users[friendId]).emit('callUser',{from:userId,signal:signalData})
+        io.to(users[friendId]).emit('callUser',{from:userId,userName,signal:signalData})
     })
 
     socket.on('answerCall',({signal,to})=>{
