@@ -44,13 +44,14 @@ io.on('connection',(socket)=>{
     })
 
     socket.on('sendMessage',async({data,receiverId})=>{
-        const {message,author,audioFile}=data
+        const {message,author,audioFile,imageFile}=data
         console.log(receiverId);
         io.to(users[receiverId]).emit('newMessage',data)
         Message.create({
             message,
             author,
             audioFile,
+            imageFile,
             to:data.to
         })
     })

@@ -2,7 +2,7 @@ import Message from '../models/dbMessage.js'
 export const sync = async(req, res) => {
      const{userId,friendId}=req.body
     try {
-        
+    const totalDocuments=await Message.countDocuments({})
         const data= await Message.find(
             {
             $or:[
