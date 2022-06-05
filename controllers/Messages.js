@@ -2,7 +2,9 @@ import Message from '../models/dbMessage.js'
 export const sync = async(req, res) => {
      const{userId,friendId}=req.body
     try {
-    const totalDocuments=await Message.countDocuments({})
+    const totalDocuments=await Message.countDocuments( {   $or:[{$and:[{"author":userId},{"to":friendId}]},{$and:[{"author":friendId},{"to":userId}]}]})
+    console.log('count is : ',totalDocuments);
+    
         const data= await Message.find(
             {
             $or:[
@@ -20,7 +22,8 @@ export const sync = async(req, res) => {
                 }
             ]
         }
-        )
+        ).skip(totalDocuments-20)
+
         res.status(200).json({data})
     } catch (error) {
 

@@ -58,8 +58,11 @@ io.on('connection',(socket)=>{
 
     socket.on('callUser',({userId,userName,friendId,signalData})=>{
         socket.emit('me',{socketId:socket.id})
-    
+        console.log('calluser');
         io.to(users[friendId]).emit('callUser',{from:userId,userName,signal:signalData})
+    })
+    socket.on('audioCall',({userId,userName,friendId,signalData})=>{
+        io.to(users[friendId]).emit('audioCall',{from:userId,userName,signal:signalData})
     })
 
     socket.on('answerCall',({signal,to})=>{
