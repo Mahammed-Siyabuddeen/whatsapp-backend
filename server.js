@@ -2,8 +2,10 @@ import express from  'express'
 import mongoose from 'mongoose'
 import Message from './models/dbMessage.js';
 import cors from 'cors'
+import bodyParser from 'body-parser'
 import AuthRouter from './router/Auth.js'
 import messagesRouter from './router/Messages.js'
+import PublicRouter from './router/Public.js'
 import {Server} from 'socket.io'
 const app=express()
 const port=process.env.PORT||9000;
@@ -85,18 +87,16 @@ io.on('connection',(socket)=>{
     })
 
 
-
 }) 
 
 
 
-app.use(express.json())
+app.use(bodyParser.json({limit:'50mb',extended:true}))
+app.use(bodyParser.urlencoded({limit:'50mb',extended:true}))
 app.use(cors())
 app.use('/auth',AuthRouter)
 app.use('/messages',messagesRouter)
-app.get('/',(req,res)=>{
-    res.status(200).send("hello world")
-})
+app.use('/',PublicRouter)
 
 
 

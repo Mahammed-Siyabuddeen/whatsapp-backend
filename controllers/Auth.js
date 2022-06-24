@@ -14,9 +14,9 @@ export const signIn = async (req, res) => {
         const isPassword = await bcrypt.compare(password, existUser.password)
         if (!isPassword) return res.status(400).json({ message: 'password incorrect' })
         const token = jwt.sign({ email: existUser.email, id: existUser._id }, 'test', { expiresIn: '1h' })
-        const { name, contacts, _id } = existUser
+        const { name, contacts, _id,email,avatar } = existUser
 
-        res.status(200).json({ name, phoneNumber, contacts, _id, token })
+        res.status(200).json({ name, phoneNumber, contacts, _id, token,email ,avatar})
     } catch (error) {
         console.log(error);
         res.status(404).json({ message: error.message })
@@ -26,7 +26,7 @@ export const signIn = async (req, res) => {
 }
 
 export const signUp = async (req, res) => {
-    const { name, password, email, contacts, phoneNumber } = req.body
+    const { name, password, email, contacts, phoneNumber,avatar } = req.body
     console.log('hello this is sigup page')
 
     try {
@@ -35,36 +35,19 @@ export const signUp = async (req, res) => {
             return res.status(400).json({ message: 'user already exists ' });
 
         const hashPassword = await bcrypt.hash(password, 12)
-        const result = await DbUsers.create({ name, password: hashPassword, email, contacts, phoneNumber })
+        const result = await DbUsers.create({ name, password: hashPassword, email, contacts, phoneNumber,avatar })
 
         const token = jwt.sign({ email: result.email, id: result._id }, 'test', { expiresIn: '1h' })
-        res.status(201).json({ _id: result?._id, name, contacts, phoneNumber, token })
+        res.status(201).json({ _id: result?._id, name, contacts, phoneNumber, token ,avatar,email})
     } catch (error) {
         console.log(error);
         res.status(404).json({ message: error.message })
     }
 }
 
-export const addTocontacts = async (req, res) => {
-
-    try {
-        const { phoneNumber, id } = req.body
-        console.log(phoneNumber);
-        const user = await DbUsers.findOne({ phoneNumber })
-        if (!user) return res.status(400).json({ message: 'user is not whatsapp' })
-        const myData = await DbUsers.findById(id)
-        myData.contacts.push(user._id)
-        const data = await DbUsers.findByIdAndUpdate(id, myData, { new: true })
-        res.status(200).json({ data })
-    } catch (error) {
-        res.status(404).json({ message: error.message })
-
-    }
 
 
-}
-
-export const fetchRooms = async(req, res) => {
+export const fetchRooms = async (req, res) => {
     const { _id } = req.body;
     try {
         var list = await DbUsers.aggregate([
@@ -73,42 +56,73 @@ export const fetchRooms = async(req, res) => {
             },
             {
                 $unwind: '$contacts'
-            },{
-                $project:{
-                    item:'$contacts'
+            }, {
+                $project: {
+                    item: '$contacts'
                 }
-            },{
-                $lookup:{
-                    from:'users',
-                    localField:'item',
-                    foreignField:'_id',
-                    as:'room'
+            }, {
+                $lookup: {
+                    from: 'users',
+                    localField: 'item',
+                    foreignField: '_id',
+                    as: 'room'
                 },
-            },{
-                $project:{
-                 _id:1,    room:1
+            }, {
+                $project: {
+                    _id: 1, room: 1
                 }
             },
             {
-                $unwind:'$room'
-            },{
-               $project:{ _id:'$room._id',name:'$room.name',phoneNumber:'$room.phoneNumber'}
+                $unwind: '$room'
+            }, {
+                $project: { _id: '$room._id', name: '$room.name', phoneNumber: '$room.phoneNumber',email:'$room.email',avatar:'$room.avatar' ,}
             }
         ])
-     res.status(200).json({list})
+        res.status(200).json({ list })
     } catch (error) {
         res.status(404).json({ message: error.message })
     }
 }
-export const allUsers = async (req, res) => {
+
+export const updateProfile=async(req,res)=>{
+    const {type,data,_id}=req.body;
     try {
+        
+        let result  
+        switch(type){
+            case 'name'         :result=await DbUsers.updateOne({_id:mongoose.Types.ObjectId(_id)},{$set:{name:data}})
+                                  break;
+            case 'email'        :result=await DbUsers.updateOne({_id:mongoose.Types.ObjectId(_id)},{$set:{email:data}})  
+                                   break;   
+            case 'phoneNumber'  :let existsPhoneNumber=await DbUsers.findOne({phoneNumber:data})
+                                    console.log('exitnumber : ',existsPhoneNumber);
+                                    if(existsPhoneNumber)  return res.status(400).json({message:'phoneNumber already used'}) 
+                                    console.log('not existed user');
+                                    result=await DbUsers.updateOne({_id:mongoose.Types.ObjectId(_id)},{$set:{phoneNumber:data}})
+                                    break;  
+           case 'avatar'        :result=await DbUsers.updateOne({_id:mongoose.Types.ObjectId(_id)},{$set:{avatar:data}})
+                                    break;                                       
+        }
 
-        const users = await DbUsers.find().sort({ _id: -1 })
-        res.status(200).json({ users })
+
+
+        console.log('result : ',result);
+         return res.status(200).json(result)
     } catch (error) {
-        console.log(error);
-        res.status(404).json({ message: error.message })
-
+        return res.status(400).json({message:error.message})
     }
-
+    
 }
+export const userDetails=async(req,res)=>{
+    try {
+        const {_id}=req.params;
+        const user=await DbUsers.findById(_id)
+    if(!user) return res.status(404).json({message:'user is not found'})
+    const{name,phoneNumber,email,avatar}=user
+    return res.status(200).json({name})
+    } catch (error) {
+        return res.status(404).json({message:error.message})
+    }
+}
+
+                

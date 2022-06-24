@@ -22,7 +22,7 @@ export const sync = async(req, res) => {
                 }
             ]
         }
-        ).skip(totalDocuments-20)
+        ).skip(totalDocuments>=40&&  totalDocuments-20)
 
         res.status(200).json({data})
     } catch (error) {

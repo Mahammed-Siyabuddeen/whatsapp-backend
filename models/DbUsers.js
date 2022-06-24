@@ -5,7 +5,8 @@ const UsersSchema=mongoose.Schema({
     phoneNumber:{type:String,require:true},
     email:String,
     contacts:{type:[mongoose.Schema.Types.ObjectId],default:[]},
-    password:{type:String,require:true}
+    password:{type:String,require:true},
+    avatar:String,
 })
 
 export default mongoose.model('users',UsersSchema)
