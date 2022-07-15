@@ -4,8 +4,6 @@ import DbUsers from '../models/DbUsers.js'
 import mongoose from 'mongoose'
 export const signIn = async (req, res) => {
     const { phoneNumber, password } = req.body
-    console.log('hello this is login page')
-
     try {
         const existUser = await DbUsers.findOne({ phoneNumber })
 
@@ -13,7 +11,7 @@ export const signIn = async (req, res) => {
             return res.status(400).json({ message: 'user not found' })
         const isPassword = await bcrypt.compare(password, existUser.password)
         if (!isPassword) return res.status(400).json({ message: 'password incorrect' })
-        const token = jwt.sign({ email: existUser.email, id: existUser._id }, 'test', { expiresIn: '1h' })
+        const token = jwt.sign({ email: existUser.email, id: existUser._id }, 'test', { expiresIn: '10d' })
         const { name, contacts, _id,email,avatar } = existUser
 
         res.status(200).json({ name, phoneNumber, contacts, _id, token,email ,avatar})
@@ -27,7 +25,6 @@ export const signIn = async (req, res) => {
 
 export const signUp = async (req, res) => {
     const { name, password, email, contacts, phoneNumber,avatar } = req.body
-    console.log('hello this is sigup page')
 
     try {
         const oldUser = await DbUsers.findOne({ phoneNumber })
@@ -37,7 +34,7 @@ export const signUp = async (req, res) => {
         const hashPassword = await bcrypt.hash(password, 12)
         const result = await DbUsers.create({ name, password: hashPassword, email, contacts, phoneNumber,avatar })
 
-        const token = jwt.sign({ email: result.email, id: result._id }, 'test', { expiresIn: '1h' })
+        const token = jwt.sign({ email: result.email, id: result._id }, 'test', { expiresIn: '10d' })
         res.status(201).json({ _id: result?._id, name, contacts, phoneNumber, token ,avatar,email})
     } catch (error) {
         console.log(error);
@@ -56,26 +53,30 @@ export const fetchRooms = async (req, res) => {
             },
             {
                 $unwind: '$contacts'
-            }, {
+            }, 
+            {
                 $project: {
-                    item: '$contacts'
+                    item: '$contacts',
                 }
-            }, {
+            },
+             {
                 $lookup: {
                     from: 'users',
-                    localField: 'item',
+                    localField: 'item._id',
                     foreignField: '_id',
                     as: 'room'
                 },
-            }, {
+            },
+             {
                 $project: {
-                    _id: 1, room: 1
+                    _id: 0, smsStatus:'$item.smsStatus',room: 1
                 }
             },
             {
                 $unwind: '$room'
-            }, {
-                $project: { _id: '$room._id', name: '$room.name', phoneNumber: '$room.phoneNumber',email:'$room.email',avatar:'$room.avatar' ,}
+            },
+             {
+                $project: { _id: '$room._id', name: '$room.name', phoneNumber: '$room.phoneNumber',email:'$room.email',status:'$room.status',smsStatus:'$smsStatus',avatar:'$room.avatar' ,}
             }
         ])
         res.status(200).json({ list })

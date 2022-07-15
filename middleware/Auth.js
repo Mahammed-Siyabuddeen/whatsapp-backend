@@ -2,16 +2,15 @@ import jwt from 'jsonwebtoken'
 const secret='test'
 
 export const auth=(req,res,next)=>{
-      console.log(req);
-
     try {
-        const token=req.headers.authorization.splite(' ')[1]
-        const decodedData=token.verfiy(token,secret)
-        req.userId=decodedData?.id
-        next()
+        const token=req.headers.authorization.split(' ')[1]
+        const decodedData=jwt.verify(token,secret)
+        req.userId=decodedData.id
+        next();
 
     } catch (error) {
         console.log(error);
+        res.status(400).send(error.message)
     }
   
 }

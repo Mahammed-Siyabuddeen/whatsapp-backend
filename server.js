@@ -7,10 +7,10 @@ import AuthRouter from './router/Auth.js'
 import messagesRouter from './router/Messages.js'
 import PublicRouter from './router/Public.js'
 import {Server} from 'socket.io'
+import DbUsers from './models/DbUsers.js';
+import { notification } from './controllers/Messages.js';
 const app=express()
 const port=process.env.PORT||9000;
-
-
 
 const server=app.listen(port,()=>console.log(`Listening on Localhost:${port}`))
 
@@ -18,14 +18,14 @@ const io=new Server(server,{
     cors:{
         origin:'*',
         methods:["POST","GET"]
-    }
+    },
+    maxHttpBufferSize:'100mb'
 })
 
 let users={}
 
 
 const addUsers=(userId,socketId)=>{
-
           users[userId]=socketId
         console.log(users);
 }
@@ -37,30 +37,37 @@ const removeuser=(socketId)=>{
 
 io.on('connection',(socket)=>{
     console.log('socketio connected');
-    
 
-    socket.on('join',({userId,socketId})=>{
+    socket.on('join',async({userId,socketId})=>{
+        socket.handshake.auth={userId}
         if(userId===undefined ||userId===null)
                     return;
         addUsers(userId,socket.id)
+        var {contacts}= await DbUsers.findByIdAndUpdate(userId,{status:'online'},{new:true})
+        for(var i=0;i<contacts.length;i++){
+            socket.to(users[contacts[i]?._id]).emit('status',{_id:userId,status:'online'})
+        }
     })
 
     socket.on('sendMessage',async({data,receiverId})=>{
-        const {message,author,audioFile,imageFile}=data
-        console.log(receiverId);
+        const {message,author,audioFile,imageFile,videoFile}=data
         io.to(users[receiverId]).emit('newMessage',data)
         Message.create({
             message,
             author,
             audioFile,
             imageFile,
-            to:data.to
+            videoFile,  
+            to:data.to,
         })
+        if(!users[receiverId]){
+           var req={body:{friendId:receiverId,_id:author,smsStatus:'unread'}}
+            notification(req)
+        }
     })
 
     socket.on('callUser',({userId,userName,friendId,signalData})=>{
         socket.emit('me',{socketId:socket.id})
-        console.log('calluser');
         io.to(users[friendId]).emit('callUser',{from:userId,userName,signal:signalData})
     })
     socket.on('audioCall',({userId,userName,friendId,signalData})=>{
@@ -68,7 +75,6 @@ io.on('connection',(socket)=>{
     })
 
     socket.on('answerCall',({signal,to})=>{
-        console.log('answer the call:',to);
         io.to(users[to]).emit('answerCall',{signal})
     })
    
@@ -76,13 +82,20 @@ io.on('connection',(socket)=>{
          socket.emit('democlient',{sms:'hi man'})
      })
    
-    socket.on('disconnect',()=>{
-        console.log('user is left!!!');
-        removeuser(socket.id)
-        console.log(users);
+    socket.on('disconnect',async()=>{
+        removeuser(socket.handshake.auth.userId,)
+        var _id=socket.handshake.auth.userId
+        var date=new Date().toISOString()
+
+        if(!_id) return;
+        var {contacts}=await DbUsers.findByIdAndUpdate(_id,{status:date},{new:true})
+        for(var i=0;i<contacts.length;i++){
+        socket.to(users[contacts[i]?._id]).emit('status',{_id,status:date})
+       }
     })
+
+
     socket.on('hangUp',({friendId})=>{
-        console.log('hangUp')
         io.to(users[friendId]).emit('hangUp')
     })
 

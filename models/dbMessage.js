@@ -6,7 +6,8 @@ const WhatsappSchema=mongoose.Schema({
     imageFile:String,
     timeStamp:{type:Date,default:new Date},
     author:mongoose.Types.ObjectId,
-    to:mongoose.Types.ObjectId
+    to:mongoose.Types.ObjectId,
+    videoFile:String,
 })
 
 
