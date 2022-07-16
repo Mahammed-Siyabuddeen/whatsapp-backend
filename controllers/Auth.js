@@ -96,9 +96,7 @@ export const updateProfile=async(req,res)=>{
             case 'email'        :result=await DbUsers.updateOne({_id:mongoose.Types.ObjectId(_id)},{$set:{email:data}})  
                                    break;   
             case 'phoneNumber'  :let existsPhoneNumber=await DbUsers.findOne({phoneNumber:data})
-                                    console.log('exitnumber : ',existsPhoneNumber);
                                     if(existsPhoneNumber)  return res.status(400).json({message:'phoneNumber already used'}) 
-                                    console.log('not existed user');
                                     result=await DbUsers.updateOne({_id:mongoose.Types.ObjectId(_id)},{$set:{phoneNumber:data}})
                                     break;  
            case 'avatar'        :result=await DbUsers.updateOne({_id:mongoose.Types.ObjectId(_id)},{$set:{avatar:data}})
@@ -107,7 +105,6 @@ export const updateProfile=async(req,res)=>{
 
 
 
-        console.log('result : ',result);
          return res.status(200).json(result)
     } catch (error) {
         return res.status(400).json({message:error.message})

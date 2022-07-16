@@ -33,7 +33,6 @@ export const allUsers = async (req, res) => {
         totalData[1]=[...totalData[1],{"_id":_id}]
         
           
-        console.log('totallData : ',totalData[0]);
 
         var   arr1=totalData[1]
         var arr2=totalData[0]

@@ -27,7 +27,6 @@ let users={}
 
 const addUsers=(userId,socketId)=>{
           users[userId]=socketId
-        console.log(users);
 }
 
 const removeuser=(socketId)=>{
@@ -36,7 +35,6 @@ const removeuser=(socketId)=>{
 }
 
 io.on('connection',(socket)=>{
-    console.log('socketio connected');
 
     socket.on('join',async({userId,socketId})=>{
         socket.handshake.auth={userId}
