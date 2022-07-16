@@ -9,9 +9,10 @@ import PublicRouter from './router/Public.js'
 import {Server} from 'socket.io'
 import DbUsers from './models/DbUsers.js';
 import { notification } from './controllers/Messages.js';
+import env from 'dotenv'
 const app=express()
+env.config()
 const port=process.env.PORT||9000;
-
 const server=app.listen(port,()=>console.log(`Listening on Localhost:${port}`))
 
 const io=new Server(server,{
@@ -111,8 +112,8 @@ app.use('/',PublicRouter)
 
 
 
-const CONNECTION_url='mongodb+srv://mohdshihab:el7HatUpxbzRvxP6@cluster0.5a7zn.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
-mongoose.connect(CONNECTION_url,{
+// const CONNECTION_url='mongodb+srv://mohdshihab:el7HatUpxbzRvxP6@cluster0.5a7zn.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+mongoose.connect(process.env.CONNECTION_URL,{
     useNewUrlParser:true,
 })
 
