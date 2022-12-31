@@ -2,7 +2,7 @@
   "name": "server",
   "version": "1.0.0",
   "description": "this is whatsapp backend",
-  "main": "sever.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "test": "server.js",
